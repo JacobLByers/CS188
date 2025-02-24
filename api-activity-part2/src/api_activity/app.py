@@ -77,7 +77,7 @@ def initialize_api(app: Flask) -> Api:
     return api
 
 
-def create_and_serve(debug: bool = True, ssl: bool = True):
+def create_and_serve(debug: bool = True, with_ssl: bool = True):
     """Construct the app together with its api and then serves it"""
     app = instantiate_app()
     ssl_context = None if not with_ssl else (_CERTFILE_PATH, _KEYFILE_PATH)
