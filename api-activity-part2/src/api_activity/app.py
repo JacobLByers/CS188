@@ -1,9 +1,10 @@
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, g
 from flask_restful import Api, Resource, reqparse
 from flask_talisman import Talisman
 from api_activity._constants import PROJECT_ROOT
+from api_activity.db import Database
 
 
 # Create the "hello" resource
@@ -36,6 +37,23 @@ class Echo(Resource):
         return jsonify(arguments)
 
 
+class Register(Resource):
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("username", type=str, required=True, help="Username cannot be blank")
+        parser.add_argument("password", type=str, required=True, help="Password cannot be blank")
+        args = parser.parse_args()
+        username = args['username']
+        password = args['password']
+        # Hash the password before storing it
+        hashed_pwd = Bcrypt().generate_password_hash(password).decode('utf-8')
+        db = get_db()
+        if db.add_user(username, hashed_pwd):
+            return jsonify({"message": f"User {username} registered successfully"})
+        else:
+            return jsonify({"message": f"User {username} already exists"}), 409
+
+
 def instantiate_app() -> Flask:
     """Instantiate a new flask app"""
     # Create the flask app
@@ -55,6 +73,7 @@ def initialize_api(app: Flask) -> Api:
     api.add_resource(Hello, "/")
     api.add_resource(Square, "/square/<int:num>")
     api.add_resource(Echo, "/echo")
+    api.add_resource(Register, "/register")
     return api
 
 
